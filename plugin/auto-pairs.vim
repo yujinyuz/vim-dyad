@@ -101,15 +101,7 @@ if !exists('g:AutoPairsJump_SkipString')
   let g:AutoPairsJump_SkipString = 0
 endif
 
-" 7.4.849 support <C-G>U to avoid breaking '.'
-" Issue talk: https://github.com/jiangmiao/auto-pairs/issues/3
-" Vim note: https://github.com/vim/vim/releases/tag/v7.4.849
-if v:version > 704 || v:version == 704 && has("patch849")
-  let s:Go = "\<C-G>U"
-else
-  let s:Go = ""
-endif
-
+let s:Go = "\<C-G>U"
 let s:Left = s:Go."\<LEFT>"
 let s:Right = s:Go."\<RIGHT>"
 
@@ -545,9 +537,7 @@ function! AutoPairsInit()
   if g:AutoPairsMapSpace
     " Try to respect abbreviations on a <SPACE>
     let do_abbrev = ""
-    if v:version == 703 && has("patch489") || v:version > 703
-      let do_abbrev = "<C-]>"
-    endif
+    let do_abbrev = "<C-]>"
     execute 'inoremap <buffer> <silent> <SPACE> '.do_abbrev.'<C-R>=AutoPairsSpace()<CR>'
   end
 
@@ -598,38 +588,17 @@ function! AutoPairsTryInit()
   " Buffer level keys mapping
   " comptible with other plugin
   if g:AutoPairsMapCR
-    if v:version == 703 && has('patch32') || v:version > 703
-      " VIM 7.3 supports advancer maparg which could get <expr> info
-      " then auto-pairs could remap <CR> in any case.
-      let info = maparg('<CR>', 'i', 0, 1)
-      if empty(info)
-        let old_cr = '<CR>'
-        let is_expr = 0
-      else
-        let old_cr = info['rhs']
-        let old_cr = s:ExpandMap(old_cr)
-        let old_cr = substitute(old_cr, '<SID>', '<SNR>' . info['sid'] . '_', 'g')
-        let is_expr = info['expr']
-        let wrapper_name = '<SID>AutoPairsOldCRWrapper73'
-      endif
+    let info = maparg('<CR>', 'i', 0, 1)
+    if empty(info)
+      let old_cr = '<CR>'
+      let is_expr = 0
     else
-      " VIM version less than 7.3
-      " the mapping's <expr> info is lost, so guess it is expr or not, it's
-      " not accurate.
-      let old_cr = maparg('<CR>', 'i')
-      if old_cr == ''
-        let old_cr = '<CR>'
-        let is_expr = 0
-      else
-        let old_cr = s:ExpandMap(old_cr)
-        " old_cr contain (, I guess the old cr is in expr mode
-        let is_expr = old_cr =~ '\V(' && toupper(old_cr) !~ '\V<C-R>'
-
-        " The old_cr start with " it must be in expr mode
-        let is_expr = is_expr || old_cr =~ '\v^"'
-        let wrapper_name = '<SID>AutoPairsOldCRWrapper'
-      end
-    end
+      let old_cr = info['rhs']
+      let old_cr = s:ExpandMap(old_cr)
+      let old_cr = substitute(old_cr, '<SID>', '<SNR>' . info['sid'] . '_', 'g')
+      let is_expr = info['expr']
+      let wrapper_name = '<SID>AutoPairsOldCRWrapper73'
+    endif
 
     if old_cr !~ 'AutoPairsReturn'
       if is_expr
